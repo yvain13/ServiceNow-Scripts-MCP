@@ -1,0 +1,516 @@
+Metadata-Version: 2.4
+Name: mcp-use
+Version: 1.1.5
+Summary: MCP Library for LLMs
+Author-email: Pietro Zullo <pietro.zullo@gmail.com>
+License: MIT
+License-File: LICENSE
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.11
+Requires-Dist: aiohttp>=3.9.0
+Requires-Dist: jsonschema-pydantic>=0.1.0
+Requires-Dist: langchain-community>=0.0.10
+Requires-Dist: langchain>=0.1.0
+Requires-Dist: mcp
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: python-dotenv>=1.0.0
+Requires-Dist: typing-extensions>=4.8.0
+Requires-Dist: websockets>=12.0
+Provides-Extra: anthropic
+Requires-Dist: anthropic>=0.15.0; extra == 'anthropic'
+Provides-Extra: dev
+Requires-Dist: black>=23.9.0; extra == 'dev'
+Requires-Dist: isort>=5.12.0; extra == 'dev'
+Requires-Dist: mypy>=1.5.0; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.21.0; extra == 'dev'
+Requires-Dist: pytest-cov>=4.1.0; extra == 'dev'
+Requires-Dist: pytest>=7.4.0; extra == 'dev'
+Requires-Dist: ruff>=0.1.0; extra == 'dev'
+Provides-Extra: openai
+Requires-Dist: openai>=1.10.0; extra == 'openai'
+Description-Content-Type: text/markdown
+
+<picture>
+  <img alt="" src="./static/image.jpg"  width="full">
+</picture>
+
+<h1 align="center">Open Source MCP CLient Library </h1>
+
+[![](https://img.shields.io/pypi/dd/mcp_use.svg)](https://pypi.org/project/mcp_use/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/mcp_use.svg)](https://pypi.org/project/mcp_use/)
+[![PyPI Version](https://img.shields.io/pypi/v/mcp_use.svg)](https://pypi.org/project/mcp_use/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/mcp_use.svg)](https://pypi.org/project/mcp_use/)
+[![Documentation](https://img.shields.io/badge/docs-mcp--use.io-blue)](https://docs.mcp-use.io)
+[![License](https://img.shields.io/github/license/pietrozullo/mcp-use)](https://github.com/pietrozullo/mcp-use/blob/main/LICENSE)
+[![Code style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![GitHub stars](https://img.shields.io/github/stars/pietrozullo/mcp-use?style=social)](https://github.com/pietrozullo/mcp-use/stargazers)
+
+🌐 MCP-Use is the open source way to connect any LLM to MCP tools and build custom agents that have tool access, without using closed source or application clients.
+
+💡 Let developers easily connect any LLM to tools like web browsing, file operations, and more.
+
+# Features
+
+## ✨ Key Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔄 **Ease of use** | Create your first MCP capable agent you need only 6 lines of code |
+| 🤖 **LLM Flexibility** | Works with any langchain supported LLM that supports tool calling (OpenAI, Anthropic, Groq, LLama etc.) |
+| 🌐 **HTTP Support** | Direct connection to MCP servers running on specific HTTP ports |
+| 🧩 **Multi-Server Support** | Use multiple MCP servers simultaneously in a single agent |
+| 🛡️ **Tool Restrictions** | Restrict potentially dangerous tools like file system or network access |
+
+
+# Quick start
+
+With pip:
+
+```bash
+pip install mcp-use
+```
+
+Or install from source:
+
+```bash
+git clone https://github.com/pietrozullo/mcp-use.git
+cd mcp-use
+pip install -e .
+```
+
+### Installing LangChain Providers
+
+mcp_use works with various LLM providers through LangChain. You'll need to install the appropriate LangChain provider package for your chosen LLM. For example:
+
+```bash
+# For OpenAI
+pip install langchain-openai
+
+# For Anthropic
+pip install langchain-anthropic
+
+# For other providers, check the [LangChain chat models documentation](https://python.langchain.com/docs/integrations/chat/)
+```
+
+and add your API keys for the provider you want to use to your `.env` file.
+
+```bash
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+```
+
+> **Important**: Only models with tool calling capabilities can be used with mcp_use. Make sure your chosen model supports function calling or tool use.
+
+### Spin up your agent:
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from mcp_use import MCPAgent, MCPClient
+
+async def main():
+    # Load environment variables
+    load_dotenv()
+
+    # Create configuration dictionary
+    config = {
+      "mcpServers": {
+        "playwright": {
+          "command": "npx",
+          "args": ["@playwright/mcp@latest"],
+          "env": {
+            "DISPLAY": ":1"
+          }
+        }
+      }
+    }
+
+    # Create MCPClient from configuration dictionary
+    client = MCPClient.from_dict(config)
+
+    # Create LLM
+    llm = ChatOpenAI(model="gpt-4o")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    # Run the query
+    result = await agent.run(
+        "Find the best restaurant in San Francisco",
+    )
+    print(f"\nResult: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+You can also add the servers configuration from a config file like this:
+
+```python
+client = MCPClient.from_config_file(
+        os.path.join("browser_mcp.json")
+    )
+```
+
+Example configuration file (`browser_mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {
+        "DISPLAY": ":1"
+      }
+    }
+  }
+}
+```
+
+For other settings, models, and more, check out the documentation.
+
+
+# Example Use Cases
+
+## Web Browsing with Playwright
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from mcp_use import MCPAgent, MCPClient
+
+async def main():
+    # Load environment variables
+    load_dotenv()
+
+    # Create MCPClient from config file
+    client = MCPClient.from_config_file(
+        os.path.join(os.path.dirname(__file__), "browser_mcp.json")
+    )
+
+    # Create LLM
+    llm = ChatOpenAI(model="gpt-4o")
+    # Alternative models:
+    # llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+    # llm = ChatGroq(model="llama3-8b-8192")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    # Run the query
+    result = await agent.run(
+        "Find the best restaurant in San Francisco USING GOOGLE SEARCH",
+        max_steps=30,
+    )
+    print(f"\nResult: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Airbnb Search
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
+from mcp_use import MCPAgent, MCPClient
+
+async def run_airbnb_example():
+    # Load environment variables
+    load_dotenv()
+
+    # Create MCPClient with Airbnb configuration
+    client = MCPClient.from_config_file(
+        os.path.join(os.path.dirname(__file__), "airbnb_mcp.json")
+    )
+
+    # Create LLM - you can choose between different models
+    llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    try:
+        # Run a query to search for accommodations
+        result = await agent.run(
+            "Find me a nice place to stay in Barcelona for 2 adults "
+            "for a week in August. I prefer places with a pool and "
+            "good reviews. Show me the top 3 options.",
+            max_steps=30,
+        )
+        print(f"\nResult: {result}")
+    finally:
+        # Ensure we clean up resources properly
+        if client.sessions:
+            await client.close_all_sessions()
+
+if __name__ == "__main__":
+    asyncio.run(run_airbnb_example())
+```
+
+Example configuration file (`airbnb_mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "airbnb": {
+      "command": "npx",
+      "args": ["-y", "@openbnb/mcp-server-airbnb"]
+    }
+  }
+}
+```
+
+## Blender 3D Creation
+
+```python
+import asyncio
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
+from mcp_use import MCPAgent, MCPClient
+
+async def run_blender_example():
+    # Load environment variables
+    load_dotenv()
+
+    # Create MCPClient with Blender MCP configuration
+    config = {"mcpServers": {"blender": {"command": "uvx", "args": ["blender-mcp"]}}}
+    client = MCPClient.from_dict(config)
+
+    # Create LLM
+    llm = ChatAnthropic(model="claude-3-5-sonnet-20240620")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    try:
+        # Run the query
+        result = await agent.run(
+            "Create an inflatable cube with soft material and a plane as ground.",
+            max_steps=30,
+        )
+        print(f"\nResult: {result}")
+    finally:
+        # Ensure we clean up resources properly
+        if client.sessions:
+            await client.close_all_sessions()
+
+if __name__ == "__main__":
+    asyncio.run(run_blender_example())
+```
+
+# Configuration File Support
+
+MCP-Use supports initialization from configuration files, making it easy to manage and switch between different MCP server setups:
+
+```python
+import asyncio
+from mcp_use import create_session_from_config
+
+async def main():
+    # Create an MCP session from a config file
+    session = create_session_from_config("mcp-config.json")
+
+    # Initialize the session
+    await session.initialize()
+
+    # Use the session...
+
+    # Disconnect when done
+    await session.disconnect()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## HTTP Connection Example
+
+MCP-Use now supports HTTP connections, allowing you to connect to MCP servers running on specific HTTP ports. This feature is particularly useful for integrating with web-based MCP servers.
+
+Here's an example of how to use the HTTP connection feature:
+
+```python
+import asyncio
+import os
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from mcp_use import MCPAgent, MCPClient
+
+async def main():
+    """Run the example using a configuration file."""
+    # Load environment variables
+    load_dotenv()
+
+    config = {
+        "mcpServers": {
+            "http": {
+                "url": "http://localhost:8931/sse"
+            }
+        }
+    }
+
+    # Create MCPClient from config file
+    client = MCPClient.from_dict(config)
+
+    # Create LLM
+    llm = ChatOpenAI(model="gpt-4o")
+
+    # Create agent with the client
+    agent = MCPAgent(llm=llm, client=client, max_steps=30)
+
+    # Run the query
+    result = await agent.run(
+        "Find the best restaurant in San Francisco USING GOOGLE SEARCH",
+        max_steps=30,
+    )
+    print(f"\nResult: {result}")
+
+if __name__ == "__main__":
+    # Run the appropriate example
+    asyncio.run(main())
+```
+
+This example demonstrates how to connect to an MCP server running on a specific HTTP port. Make sure to start your MCP server before running this example.
+
+# Multi-Server Support
+
+MCP-Use supports working with multiple MCP servers simultaneously, allowing you to combine tools from different servers in a single agent. This is useful for complex tasks that require multiple capabilities, such as web browsing combined with file operations or 3D modeling.
+
+## Configuration
+
+You can configure multiple servers in your configuration file:
+
+```json
+{
+  "mcpServers": {
+    "airbnb": {
+      "command": "npx",
+      "args": ["-y", "@openbnb/mcp-server-airbnb", "--ignore-robots-txt"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {
+        "DISPLAY": ":1"
+      }
+    }
+  }
+}
+```
+
+## Usage
+
+The `MCPClient` class provides several methods for managing multiple servers:
+
+```python
+import asyncio
+from mcp_use import MCPClient, MCPAgent
+from langchain_anthropic import ChatAnthropic
+
+async def main():
+    # Create client with multiple servers
+    client = MCPClient.from_config_file("multi_server_config.json")
+
+    # Create agent with the client
+    agent = MCPAgent(
+        llm=ChatAnthropic(model="claude-3-5-sonnet-20240620"),
+        client=client
+    )
+
+    try:
+        # Run a query that uses tools from multiple servers
+        result = await agent.run(
+            "Search for a nice place to stay in Barcelona on Airbnb, "
+            "then use Google to find nearby restaurants and attractions."
+        )
+        print(result)
+    finally:
+        # Clean up all sessions
+        await client.close_all_sessions()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+# Tool Access Control
+
+MCP-Use allows you to restrict which tools are available to the agent, providing better security and control over agent capabilities:
+
+```python
+import asyncio
+from mcp_use import MCPAgent, MCPClient
+from langchain_openai import ChatOpenAI
+
+async def main():
+    # Create client
+    client = MCPClient.from_config_file("config.json")
+
+    # Create agent with restricted tools
+    agent = MCPAgent(
+        llm=ChatOpenAI(model="gpt-4"),
+        client=client,
+        disallowed_tools=["file_system", "network"]  # Restrict potentially dangerous tools
+    )
+
+    # Run a query with restricted tool access
+    result = await agent.run(
+        "Find the best restaurant in San Francisco"
+    )
+    print(result)
+
+    # Clean up
+    await client.close_all_sessions()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+# Roadmap
+
+<ul>
+<li>[x] Multiple Servers at once </li>
+<li>[x] Test remote connectors (http, ws)</li>
+<li>[ ] ... </li>
+</ul>
+
+# Contributing
+
+We love contributions! Feel free to open issues for bugs or feature requests.
+
+# Requirements
+
+- Python 3.11+
+- MCP implementation (like Playwright MCP)
+- LangChain and appropriate model libraries (OpenAI, Anthropic, etc.)
+
+# Citation
+
+If you use MCP-Use in your research or project, please cite:
+
+```bibtex
+@software{mcp_use2025,
+  author = {Zullo, Pietro},
+  title = {MCP-Use: MCP Library for Python},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/pietrozullo/mcp-use}
+}
+```
+
+# License
+
+MIT
