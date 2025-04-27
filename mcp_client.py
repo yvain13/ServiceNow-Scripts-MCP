@@ -10,23 +10,13 @@ async def main():
 
     # Create configuration dictionary
     config = {
-      "mcpServers": {
-         "servicenow-mcp": {
-            "command": "/opt/anaconda3/bin/python",
-            "args": [
-    
-                      "-m",
-                      "servicenow_mcp.cli"
-                  ],
-            "env": {
-                    "SERVICENOW_INSTANCE_URL": os.getenv("SERVICENOW_INSTANCE_URL"),
-                    "SERVICENOW_USERNAME": os.getenv("SERVICENOW_USERNAME"),
-                    "SERVICENOW_PASSWORD": os.getenv("SERVICENOW_PASSWORD"),
-                    "SERVICENOW_AUTH_TYPE": os.getenv("SERVICENOW_AUTH_TYPE")
-                  }
+        "mcpServers": {
+            "http": {
+                "url": "http://localhost:9123/sse"
+            }
         }
-      }
     }
+
 
     # Create MCPClient from configuration dictionary
     client = MCPClient.from_dict(config)
@@ -39,7 +29,7 @@ async def main():
 
     # Run the query
     result = await agent.run(
-        "Can you create a Client Script which alerts 'Hello World' when the form loads on  incident table?",
+        "Can you create a br which logs 'Hello World'  on before insert  incident table?",
     )
     print(f"\nResult: {result}")
 
