@@ -1,0 +1,7 @@
+fastmcp>=0.3.0
+gradio>=5.0.0
+httpx>=0.20.0
+langchain-openai>=0.1.0
+python-dotenv>=1.0.0
+nest_asyncio>=1.5.8
+mcp-use>=0.2.0
