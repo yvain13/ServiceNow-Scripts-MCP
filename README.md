@@ -2,7 +2,7 @@
 
 This repository contains **two moving pieces** that work together through the [Model‑Context Protocol (MCP)](https://github.com/modelcontextprotocol):
 
-1. **`servicenow_br_mcp_server.py`** – a FastMCP server exposing CRUD tools for ServiceNow *Business Rules* and *Client Scripts*.
+1. **`sn_mcp_tools.py`** – a FastMCP server exposing CRUD tools for ServiceNow *Business Rules* and *Client Scripts*.
 2. **`script_generator.py`** – a Gradio UI that talks to the MCP server to generate, edit, and deploy scripts with GPT‑4o.
 
 ---
@@ -30,7 +30,7 @@ SERVICENOW_AUTH_TYPE=basic
 |------------|-----------|
 |```bash
 # start FastMCP server (HTTP + SSE on :9123)
-$ python servicenow_br_mcp_server.py
+$ python sn_mcp_tools.py
 ```|```bash
 # launch Gradio UI
 $ python script_generator.py
@@ -97,7 +97,7 @@ Replace the placeholder values with your actual credentials.
 Open a terminal window and run:
 
 ```bash
-python servicenow_br_mcp_server.py
+python sn_mcp_tools.py
 ```
 
 You should see output indicating that the server is running and listening on port 9123.
@@ -142,7 +142,7 @@ Open the URL in your browser and you should see the ServiceNow Script Manager in
 ```
 ┌───────────────┐       SSE/HTTP        ┌────────────────────────┐
 │ Gradio UI     │  ───────────────────▶ │ FastMCP Server         │
-│ (script_…py)  │ ◀───────────────────  │ (servicenow_…py)       │
+│ (script_…py)  │ ◀───────────────────  │ (sn_mcp_tools.py)      │
 └───────────────┘       MCP calls       └──────────┬─────────────┘
        ▲  GPT‑4o                                    │ REST
        │                                            ▼
@@ -159,7 +159,7 @@ Open the URL in your browser and you should see the ServiceNow Script Manager in
 
 | File | Purpose | Run with |
 |------|---------|----------|
-| `servicenow_br_mcp_server.py` | Exposes `create_business_rule`, `list_business_rules`, `update_business_rule`, plus Client‑Script counterparts. | `python servicenow_br_mcp_server.py` |
+| `sn_mcp_tools.py` | Exposes `create_business_rule`, `list_business_rules`, `update_business_rule`, plus Client‑Script counterparts. | `python sn_mcp_tools.py` |
 | `script_generator.py` | Gradio Blocks UI: generate, AI‑edit, list, view, update. | `python script_generator.py` |
 | `mcp_client.py` | Example script showing how to create an MCPAgent instance that connects to the FastMCP server. | `python mcp_client.py` |
 | `requirements.txt` | Python deps (FastMCP, Gradio, httpx, etc.). | `pip install -r requirements.txt` |
