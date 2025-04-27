@@ -1,13 +1,13 @@
 """
 FastMCP server exposing create_business_rule via HTTP/SSE.
-Run: python servicenow_br_mcp_server.py
+Run: python sn_mcp_tools.py
 """
 
 import os, sys, httpx, asyncio 
 from typing import Optional, List, Dict, Any
 from fastmcp import FastMCP
 
-mcp = FastMCP("sn_br_mcp_server")
+mcp = FastMCP("sn_mcp_tools")
 
 # ----- ServiceNow credentials -----
 SN_URL  = os.getenv("SERVICENOW_INSTANCE_URL", "").rstrip("/")

@@ -41,14 +41,14 @@ async def generate_script(instr, stype, table, base_script=None):
     agent, llm = create_mcp_client()
     if base_script is None:
         prompt = (
-            f"Write a ServiceNow {'Client Script' if stype=='Client Script' else 'Business Rule'} "
-            f"that {instr} on/for the {table} table. Only script, no explanation."
+            f"You are a ServiceNow Developer assistant.Write a ServiceNow {'Client Script' if stype=='Client Script' else 'Business Rule'} "
+            f"that {instr} on/for the {table} table. Only script, no explanation. Do not include any additional text or quote like ```js```."
         )
     else:
         prompt = (
             f"Here is an existing {'client script' if stype=='Client Script' else 'business rule'}:\n\n"
             f"```javascript\n{base_script}\n```\n\nInstruction: {instr}.\n"
-            "Return only the edited script."
+            "Return only the edited script. Do not include any additional text or quote like ```json```."
         )
     return (await llm.ainvoke(prompt)).content
 
@@ -79,8 +79,22 @@ async def list_scripts(stype, table, query):
 
 async def get_script(stype, sys_id):
     agent, _ = create_mcp_client()
-    q = f"Get {stype.lower()} with sys_id {sys_id} as JSON (name, sys_id, table, script)"
+    q = f"""You are a ServiceNow Developer assistant.
+Retrieve the {stype} with sys_id {sys_id}.
+Do not include any additional text or quote like ```json```.
+Respond ONLY with JSON using this schema:
+{{
+  "name": string,
+  "sys_id": string,
+  "table": string,
+  "script": string,
+  "active": boolean,
+  "description": string
+}}
+### Now answer for sys_id {sys_id}."""
     raw = await agent.run(q)
+    print("script response")
+    print(raw)
     try:
         return json.loads(raw) if isinstance(raw, str) else raw
     except:
