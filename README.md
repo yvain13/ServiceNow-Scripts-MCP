@@ -2,7 +2,7 @@
 
 This repository contains **two moving pieces** that work together through the [Model‑Context Protocol (MCP)](https://github.com/modelcontextprotocol):
 
-1. **`sn_mcp_tools.py`** – a FastMCP server exposing CRUD tools for ServiceNow *Business Rules* and *Client Scripts*.
+1. **`sn_mcp_tools.py`** – a FastMCP server exposing CRUD tools for ServiceNow *Business Rules*, *Client Scripts*, and *Script Includes*.
 2. **`script_generator.py`** – a Gradio UI that talks to the MCP server to generate, edit, and deploy scripts with GPT‑4o.
 
 ---
@@ -42,9 +42,9 @@ Create a file named `.env` in the root directory with your credentials:
 OPENAI_API_KEY=sk-your-api-key-here
 
 # ServiceNow Instance Details
-SERVICENOW_INSTANCE_URL=https://your-instance.service-now.com/
-SERVICENOW_USERNAME=your-username
-SERVICENOW_PASSWORD=your-password
+SERVICENOW_URL=https://your-instance.service-now.com/
+SERVICENOW_USER=your-username
+SERVICENOW_PASS=your-password
 SERVICENOW_AUTH_TYPE=basic
 ```
 
@@ -66,11 +66,11 @@ Open the URL shown in the second terminal (typically http://127.0.0.1:7860) in y
 ## How it works (architecture)
 
 ```
-┌───────────────┐       SSE/HTTP        ┌────────────────────────┐
+┌───────────────┐       HTTP/MCP        ┌────────────────────────┐
 │ Gradio UI     │  ───────────────────▶ │ FastMCP Server         │
 │ (script_…py)  │ ◀───────────────────  │ (sn_mcp_tools.py)      │
 └───────────────┘       MCP calls       └──────────┬─────────────┘
-       ▲  GPT‑4o                                    │ REST
+       ▲  GPT‑4o                                    │ REST API
        │                                            ▼
        └─ openai                                    ServiceNow Table API
 ```
@@ -78,7 +78,7 @@ Open the URL shown in the second terminal (typically http://127.0.0.1:7860) in y
 1. **User** enters an instruction or selects an existing script.
 2. **Gradio UI** (client) calls GPT‑4o *or* an MCP tool.
 3. **FastMCP server** translates the tool call into a ServiceNow REST request.
-4. Results stream back to the UI via SSE.
+4. Results stream back to the UI via HTTP.
 
 ---
 ## Key Files
@@ -104,7 +104,7 @@ from langchain_openai import ChatOpenAI
 config = {
     "mcpServers": {
         "http": {
-            "url": "http://localhost:9123/sse"
+            "url": "http://localhost:9123/mcp"
         }
     }
 }
@@ -137,14 +137,37 @@ Add this to your client‑side `mcp.config.json` (or equivalent):
       "command": "npx",
       "args": [
         "mcp-remote",
-        "http://localhost:9123/sse"
+        "http://localhost:9123/mcp"
       ]
     }
   }
 }
 ```
 
-That's it—once the FastMCP server is running on port 9123, your editor or chat client can call `create_business_rule`, `list_client_scripts`, and the rest exactly the same way the Gradio UI does.
+That's it—once the FastMCP server is running on port 9123, your editor or chat client can call the available tools exactly the same way the Gradio UI does.
+
+## Available MCP Tools
+
+The FastMCP server provides comprehensive CRUD operations for ServiceNow scripts:
+
+### Business Rules
+- `create_business_rule(name, table, script, when, active, description)` - Create a new business rule
+- `list_business_rules(query, table, limit)` - List business rules with filtering
+- `update_business_rule(sys_id, script, name, table, when, active, description)` - Update existing business rule
+- `get_business_rule(sys_id)` - Get specific business rule by sys_id
+
+### Client Scripts
+- `create_client_script(name, table, script, type, active, description)` - Create a new client script
+- `list_client_scripts(query, table, limit)` - List client scripts with filtering
+- `update_client_script(sys_id, script, name, table, type, active, description)` - Update existing client script
+- `get_client_script(sys_id)` - Get specific client script by sys_id
+
+### Script Includes
+- `create_script_include(name, script, active, description)` - Create a new script include
+- `update_script_include(sys_id, script, name, active, description)` - Update existing script include
+- `get_script_include(sys_id)` - Get specific script include by sys_id
+
+All tools include proper error handling, authentication, and detailed logging for debugging.
 
 ---
 ## Troubleshooting
