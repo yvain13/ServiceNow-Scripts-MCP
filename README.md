@@ -13,8 +13,8 @@ Follow these simple steps to get the solution up and running:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yvain13/MCP-Use-with-SN.git
-cd MCP-Use-with-SN
+git clone https://github.com/yvain13/ServiceNow-Scripts-MCP.git
+cd ServiceNow-Scripts-MCP
 ```
 
 ### 2. Set Up Python Environment
